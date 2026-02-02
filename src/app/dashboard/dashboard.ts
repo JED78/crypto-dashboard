@@ -34,6 +34,14 @@ Chart.register(
   Legend
 );
 
+// ⭐ Añadir aquí
+type Opportunity = {
+  symbol: string;
+  reason: string;
+  value: number;
+  type: 'bullish' | 'bearish' | 'neutral';
+};
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -47,6 +55,8 @@ Chart.register(
     BaseChartDirective
   ]
 })
+
+
 export class Dashboard implements OnInit, OnDestroy {
 
   @ViewChildren(BaseChartDirective) charts?: QueryList<BaseChartDirective>;
@@ -70,6 +80,14 @@ export class Dashboard implements OnInit, OnDestroy {
     { label: '1 minuto', value: 60000 },
   ];
 
+  // ⭐ OPORTUNIDADES DEL DÍA
+opportunities: {
+  symbol: string;
+  reason: string;
+  value: number;
+  type: 'bullish' | 'bearish' | 'neutral';
+}[] = [];
+
   selectedCrypto = 'BTC';
   selectedQuote = 'USDT';
   selectedRefresh = 5000;
@@ -77,6 +95,18 @@ export class Dashboard implements OnInit, OnDestroy {
   currentPrice: number | undefined = undefined;
   lastUpdate: Date | undefined = undefined;
   priceSub: Subscription | undefined = undefined;
+
+// ⭐ DETECTOR DE TENDENCIAS
+  trendList: { symbol: string; change: number; trend: string }[] = [];
+
+  // ⭐ RESUMEN DIARIO
+  dailySummary = {
+    btcChange: 0,
+    ethChange: 0,
+    market: '',
+    topSymbol: '',
+    topChange: 0
+  };
 
   // ⭐ GRÁFICA PRECIO
   chartData = {
@@ -171,6 +201,10 @@ export class Dashboard implements OnInit, OnDestroy {
     this.startPriceStream();
     this.loadChartData();
     this.loadTop5Monthly();
+    this.loadDailySummary();   // ⭐ NUEVO
+    this.loadTrendDetector();   // ⭐ NUEVO
+    this.loadOpportunities();
+
   }
 
   ngOnDestroy() {
@@ -256,6 +290,96 @@ export class Dashboard implements OnInit, OnDestroy {
     return rsi;
   }
 
+  private quickRSI(closes: number[]): number {
+  if (closes.length < 15) return 50;
+
+  const slice = closes.slice(-15);
+  let gains = 0, losses = 0;
+
+  for (let i = 1; i < slice.length; i++) {
+    const diff = slice[i] - slice[i - 1];
+    if (diff >= 0) gains += diff;
+    else losses -= diff;
+  }
+
+  const rs = gains / (losses || 1);
+  return 100 - 100 / (1 + rs);
+}
+
+loadOpportunities() {
+  const symbols = ['BTC','ETH','BNB','SOL','XRP','ADA','AVAX','DOGE','DOT','LINK'];
+
+  const requests = symbols.map(symbol =>
+  this.binance.getKlines(symbol + 'USDT', '1h', 30).pipe(
+    map((klines: any[]): Opportunity[] => {
+      const closes = klines.map(k => parseFloat(k[4]));
+      const volumes = klines.map(k => parseFloat(k[5]));
+
+      const rsi = this.quickRSI(closes);
+      const last = closes[closes.length - 1];
+      const prev = closes[closes.length - 2];
+      const change1h = ((last - prev) / prev) * 100;
+
+      const avgVol = volumes.slice(0, -1).reduce((a, b) => a + b, 0) / (volumes.length - 1);
+      const volSpike = (volumes[volumes.length - 1] / avgVol) * 100;
+
+      const opportunities: Opportunity[] = [];
+
+      if (rsi < 30) opportunities.push({ symbol, reason: 'RSI muy bajo', value: rsi, type: 'bullish' });
+      if (rsi > 70) opportunities.push({ symbol, reason: 'RSI muy alto', value: rsi, type: 'bearish' });
+      if (volSpike > 150) opportunities.push({ symbol, reason: 'Volumen inusual', value: volSpike, type: 'bullish' });
+      if (Math.abs(change1h) > 4) opportunities.push({
+        symbol,
+        reason: 'Movimiento fuerte en 1h',
+        value: change1h,
+        type: change1h > 0 ? 'bullish' : 'bearish'
+      });
+
+      return opportunities;
+    })
+  )
+);
+}
+  // ⭐ helper para % cambio desde klines
+    private getChangeFromKlines(klines: any[]): number {
+    if (!klines || klines.length < 2) return 0;
+
+    const first = parseFloat(klines[0][4]);
+    const last = parseFloat(klines[klines.length - 1][4]);
+
+    return ((last - first) / first) * 100;
+  }
+
+  // ⭐ DETECTOR DE TENDENCIAS (BTC, ETH, BNB, SOL, XRP, ADA, AVAX, DOGE, DOT, LINK)
+  loadTrendDetector() {
+    const symbols = ['BTC','ETH','BNB','SOL','XRP','ADA','AVAX','DOGE','DOT','LINK'];
+
+    const requests = symbols.map(symbol =>
+      this.binance.getKlines(symbol + 'USDT', '4h', 30).pipe(
+        map((klines: any[]) => {
+          const change = this.getChangeFromKlines(klines);
+          const trend = this.getTrendLabel(change);
+          return { symbol, change, trend };
+        })
+      )
+    );
+
+    forkJoin(requests).subscribe(results => {
+      // Ordenamos por fuerza de movimiento (absoluto)
+      this.trendList = results.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+    });
+  }
+
+
+  private getTrendLabel(change: number): string {
+    if (change > 8) return 'Alcista fuerte';
+    if (change > 2) return 'Alcista';
+    if (change < -8) return 'Bajista fuerte';
+    if (change < -2) return 'Bajista';
+    return 'Lateral';
+  }
+
+
   // ⭐ PRECIO + VOLUMEN + RSI
   loadChartData() {
     const symbol = this.buildSymbol();
@@ -323,6 +447,46 @@ export class Dashboard implements OnInit, OnDestroy {
       this.chartTop5Data.datasets[0].data = top5.map(t => t.change);
 
       this.charts?.forEach(c => c.update());
+    });
+  }
+
+  // ⭐ RESUMEN DIARIO AUTOMÁTICO
+  loadDailySummary() {
+    // BTC y ETH 24h (velas 1h)
+    forkJoin({
+      btc: this.binance.getKlines('BTCUSDT', '1h', 24),
+      eth: this.binance.getKlines('ETHUSDT', '1h', 24)
+    }).subscribe(({ btc, eth }) => {
+      const btcChange = this.getChangeFromKlines(btc);
+      const ethChange = this.getChangeFromKlines(eth);
+
+      this.dailySummary.btcChange = btcChange;
+      this.dailySummary.ethChange = ethChange;
+
+      const avg = (btcChange + ethChange) / 2;
+
+      if (avg > 2) this.dailySummary.market = 'Alcista';
+      else if (avg < -2) this.dailySummary.market = 'Bajista';
+      else this.dailySummary.market = 'Lateral';
+    });
+
+    // Mejor cripto del día entre top50
+    const requests = this.top50.map(symbol =>
+      this.binance.getKlines(symbol + 'USDT', '1h', 24).pipe(
+        map((klines: any[]) => {
+          const change = this.getChangeFromKlines(klines);
+          return { symbol, change };
+        })
+      )
+    );
+
+    forkJoin(requests).subscribe(results => {
+      const top = results.sort((a, b) => b.change - a.change)[0];
+
+      if (top) {
+        this.dailySummary.topSymbol = top.symbol;
+        this.dailySummary.topChange = top.change;
+      }
     });
   }
 }

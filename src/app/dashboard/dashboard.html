@@ -77,7 +77,7 @@
 
   <!-- ⭐ GRÁFICA DE VOLUMEN -->
   <div class="chart-container w-full max-w-4xl bg-white/70 backdrop-blur-md
-              p-6 rounded-xl shadow-xl animate-fade-in-up">
+              p-6 rounded-xl shadow-xl animate-fade-in-up mb-8">
     <canvas 
       class="bg-white"
       baseChart
@@ -110,5 +110,125 @@
     [options]="chartTop5Options"
     [type]="'bar'">
   </canvas>
+</div>
+
+<!-- ⭐ RESUMEN DIARIO DEL MERCADO -->
+<div class="w-full max-w-4xl bg-white/70 backdrop-blur-md
+            p-6 rounded-xl shadow-xl animate-fade-in-up mb-8 mt-12">
+
+  <h2 class="text-2xl font-semibold text-blue-800 mb-8">
+    Resumen diario del mercado
+  </h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-gray-700">
+
+    <div>
+      <p class="text-sm font-medium text-gray-500">BTC 24h</p>
+      <p [ngClass]="dailySummary.btcChange >= 0 ? 'text-green-600' : 'text-red-600'"
+         class="text-xl font-bold">
+        {{ dailySummary.btcChange | number:'1.2-2' }} %
+      </p>
+    </div>
+
+    <div>
+      <p class="text-sm font-medium text-gray-500">ETH 24h</p>
+      <p [ngClass]="dailySummary.ethChange >= 0 ? 'text-green-600' : 'text-red-600'"
+         class="text-xl font-bold">
+        {{ dailySummary.ethChange | number:'1.2-2' }} %
+      </p>
+    </div>
+
+    <div>
+      <p class="text-sm font-medium text-gray-500">Tendencia del mercado</p>
+      <p class="text-xl font-bold text-blue-700">
+        {{ dailySummary.market }}
+      </p>
+    </div>
+
+  </div>
+
+  <div class="mt-4 border-t border-gray-200 pt-4">
+    <p class="text-sm font-medium text-gray-500">Cripto destacada del día</p>
+    <p class="text-lg font-semibold text-gray-800">
+      {{ dailySummary.topSymbol || 'Calculando...' }}
+      <span *ngIf="dailySummary.topSymbol"
+            [ngClass]="dailySummary.topChange >= 0 ? 'text-green-600' : 'text-red-600'">
+        ({{ dailySummary.topChange | number:'1.2-2' }} %)
+      </span>
+    </p>
+  </div>
+
+ <!-- ⭐ DETECTOR DE TENDENCIAS -->
+<div class="w-full max-w-4xl bg-white/70 backdrop-blur-md
+            p-6 rounded-xl shadow-xl animate-fade-in-up mb-8 mt-16">
+
+  <h2 class="text-2xl font-semibold text-blue-800 mb-4">
+    Detector de tendencias
+  </h2>
+
+  <div *ngIf="trendList.length; else loadingTrends"
+       class="space-y-2 text-gray-700">
+
+    <div *ngFor="let t of trendList"
+         class="flex items-center justify-between border-b border-gray-200 pb-2 last:border-b-0">
+
+      <span class="font-semibold text-gray-800">
+        {{ t.symbol }}
+      </span>
+
+      <span class="text-sm text-gray-500">
+        {{ t.trend }}
+      </span>
+
+      <span [ngClass]="t.change >= 0 ? 'text-green-600' : 'text-red-600'"
+            class="text-sm font-semibold">
+        {{ t.change | number:'1.2-2' }} %
+      </span>
+    </div>
+
+  </div>
+
+  <ng-template #loadingTrends>
+    <p class="text-gray-500 text-sm">Calculando tendencias...</p>
+  </ng-template>
+</div>
+  <!-- ⭐ OPORTUNIDADES DEL DÍA -->
+<div class="w-full max-w-4xl bg-white/70 backdrop-blur-md
+            p-6 rounded-xl shadow-xl animate-fade-in-up mb-8 mt-16">
+
+  <h2 class="text-2xl font-semibold text-blue-800 mb-4">
+    Oportunidades del día
+  </h2>
+
+  <div *ngIf="opportunities.length; else loadingOpps"
+       class="space-y-3 text-gray-700">
+
+    <div *ngFor="let o of opportunities"
+         class="flex items-center justify-between border-b border-gray-200 pb-2 last:border-b-0">
+
+      <span class="font-semibold text-gray-800">
+        {{ o.symbol }}
+      </span>
+
+      <span class="text-sm text-gray-500">
+        {{ o.reason }}
+      </span>
+
+      <span [ngClass]="{
+              'text-green-600': o.type === 'bullish',
+              'text-red-600': o.type === 'bearish',
+              'text-gray-600': o.type === 'neutral'
+            }"
+            class="text-sm font-semibold">
+        {{ o.value | number:'1.1-1' }}
+      </span>
+    </div>
+
+  </div>
+
+  <ng-template #loadingOpps>
+    <p class="text-gray-500 text-sm">Buscando oportunidades...</p>
+  </ng-template>
+
 </div>
 </div>
