@@ -4,7 +4,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BaseChartDirective } from 'ng2-charts';
-import { BinanceService } from '../../Services/binance.service';
+import { BinanceService } from '../services/binance.service';
 import { interval, Subscription, switchMap, forkJoin,  } from 'rxjs';
 import { of, timeout, retry, catchError, map } from 'rxjs';
 import {

@@ -1,0 +1,64 @@
+<!-- Botón flotante para abrir el menú -->
+<button 
+  class="fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition"
+  *ngIf="!isOpen"
+  (click)="toggleMenu()">
+  ☰
+</button>
+
+<!-- Overlay oscuro cuando el menú está abierto -->
+<div 
+  class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity"
+  *ngIf="isOpen"
+  (click)="toggleMenu()">
+</div>
+
+<!-- Menú lateral -->
+<div 
+  class="fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 transform transition-transform duration-300"
+  [ngClass]="{ '-translate-x-full': !isOpen, 'translate-x-0': isOpen }">
+
+  <!-- Header del menú -->
+  <div class="flex items-center justify-between p-4 border-b border-gray-200">
+    <h3 class="text-lg font-semibold text-gray-800">Menú</h3>
+
+    <button 
+      class="text-gray-600 hover:text-gray-800 text-xl"
+      (click)="toggleMenu()">
+      ✕
+    </button>
+  </div>
+
+  <!-- Opciones del menú -->
+  <nav class="p-4 space-y-3 text-gray-700">
+
+    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer">
+      📊 Dashboard
+    </a>
+
+    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer">
+      📈 Oportunidades
+    </a>
+
+    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer">
+      🔔 Alertas
+    </a>
+
+    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer"
+   routerLink="/topGainers"
+   (click)="toggleMenu()">
+  📈 Top Gainers
+    </a>
+
+
+    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer">
+      ⚙️ Configuración
+    </a>
+
+    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer">
+      🧠 IA Trading
+    </a>
+
+  </nav>
+
+</div>
