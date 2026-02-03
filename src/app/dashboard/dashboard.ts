@@ -33,7 +33,7 @@ Chart.register(
   Tooltip,
   Legend
 );
-import { CarouselModule } from 'ngx-owl-carousel-o';
+
 
 
 
@@ -59,9 +59,8 @@ type Opportunity = {
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
-    BaseChartDirective,
-    CarouselModule
-, 
+    BaseChartDirective
+ 
 
   ]
 })
