@@ -5,11 +5,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BaseChartDirective } from 'ng2-charts';
 import { BinanceService } from '../../Services/binance.service';
-import { interval, Subscription, switchMap, forkJoin, map } from 'rxjs';
-import { FormsModule } from '@angular/forms';
-import { PriceAlert } from '../../app/Models/price-alert.model';
-
-
+import { interval, Subscription, switchMap, forkJoin,  } from 'rxjs';
+import { of, timeout, retry, catchError, map } from 'rxjs';
 import {
   Chart,
   CategoryScale,
@@ -21,8 +18,7 @@ import {
   BarController,
   Filler,
   Tooltip,
-  Legend,
-    FormsModule, 
+  Legend
 } from 'chart.js';
 
 Chart.register(
@@ -37,6 +33,13 @@ Chart.register(
   Tooltip,
   Legend
 );
+import { CarouselModule } from 'ngx-owl-carousel-o';
+
+
+
+
+
+
 
 // ⭐ Añadir aquí
 type Opportunity = {
@@ -56,7 +59,10 @@ type Opportunity = {
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
-    BaseChartDirective
+    BaseChartDirective,
+    CarouselModule
+, 
+
   ]
 })
 
@@ -112,6 +118,7 @@ opportunities: {
     topChange: 0
   };
 
+  
   // ⭐ GRÁFICA PRECIO
   chartData = {
     labels: [] as string[],
@@ -198,9 +205,7 @@ opportunities: {
     scales: { x: {}, y: {} }
   };
 
-  constructor(private binance: BinanceService, private alertService: PriceAlertService) {}
-  
-
+  constructor(private binance: BinanceService) {}
 
   ngOnInit() {
     this.loadSymbols();
@@ -312,40 +317,117 @@ opportunities: {
   return 100 - 100 / (1 + rs);
 }
 
+
+isLoadingOpps = true;   // controla el estado de carga
+
 loadOpportunities() {
+
+  this.isLoadingOpps = true;   // activa el estado de carga
+  this.opportunities = [];     // limpia resultados previos
+
   const symbols = ['BTC','ETH','BNB','SOL','XRP','ADA','AVAX','DOGE','DOT','LINK'];
 
   const requests = symbols.map(symbol =>
-  this.binance.getKlines(symbol + 'USDT', '1h', 30).pipe(
-    map((klines: any[]): Opportunity[] => {
-      const closes = klines.map(k => parseFloat(k[4]));
-      const volumes = klines.map(k => parseFloat(k[5]));
+    this.binance.getKlines(symbol + 'USDT', '1h', 30).pipe(
 
-      const rsi = this.quickRSI(closes);
-      const last = closes[closes.length - 1];
-      const prev = closes[closes.length - 2];
-      const change1h = ((last - prev) / prev) * 100;
+      timeout(5000),
+      retry(2),
+      catchError(err => {
+        console.warn(`❌ Error en ${symbol}:`, err);
+        return of([]); 
+      }),
 
-      const avgVol = volumes.slice(0, -1).reduce((a, b) => a + b, 0) / (volumes.length - 1);
-      const volSpike = (volumes[volumes.length - 1] / avgVol) * 100;
+      map((klines: any[]): Opportunity[] => {
 
-      const opportunities: Opportunity[] = [];
+        if (!klines || klines.length < 3) {
+          console.warn(`⚠️ Datos insuficientes para ${symbol}`);
+          return [];
+        }
 
-      if (rsi < 30) opportunities.push({ symbol, reason: 'RSI muy bajo', value: rsi, type: 'bullish' });
-      if (rsi > 70) opportunities.push({ symbol, reason: 'RSI muy alto', value: rsi, type: 'bearish' });
-      if (volSpike > 150) opportunities.push({ symbol, reason: 'Volumen inusual', value: volSpike, type: 'bullish' });
-      if (Math.abs(change1h) > 4) opportunities.push({
-        symbol,
-        reason: 'Movimiento fuerte en 1h',
-        value: change1h,
-        type: change1h > 0 ? 'bullish' : 'bearish'
-      });
+        const closes = klines.map(k => parseFloat(k[4]));
+        const volumes = klines.map(k => parseFloat(k[5]));
 
-      return opportunities;
-    })
-  )
-);
+        const rsi = this.quickRSI(closes);
+        const last = closes[closes.length - 1];
+        const prev = closes[closes.length - 2];
+        const change1h = ((last - prev) / prev) * 100;
+
+        const avgVol = volumes.slice(0, -1).reduce((a, b) => a + b, 0) / (volumes.length - 1);
+        const volSpike = (volumes[volumes.length - 1] / avgVol) * 100;
+
+        const opportunities: Opportunity[] = [];
+
+        let score = 0;
+
+        if (rsi < 40) score += 1;
+        if (rsi < 30) score += 2;
+
+        if (volSpike > 120) score += 1;
+        if (volSpike > 150) score += 2;
+
+        if (Math.abs(change1h) > 2) score += 1;
+        if (Math.abs(change1h) > 4) score += 2;
+
+        if (score >= 2) {
+          opportunities.push({
+            symbol,
+            reason: `Puntuación ${score}`,
+            value: score,
+            type: score >= 3 ? 'bullish' : 'neutral'
+          });
+        }
+
+        if (Math.abs(change1h) > 4) {
+          opportunities.push({
+            symbol,
+            reason: 'Movimiento fuerte en 1h',
+            value: change1h,
+            type: change1h > 0 ? 'bullish' : 'bearish'
+          });
+        }
+
+        return opportunities;
+      })
+    )
+  );
+
+  forkJoin(requests).subscribe(results => {
+
+  const flat = results.flat();
+
+  this.opportunities = flat.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+
+  console.log("📈 Oportunidades detectadas:", this.opportunities);
+
+  this.isLoadingOpps = false;   // ← MUY IMPORTANTE
+});
+
+
+
+  forkJoin(requests).subscribe(results => {
+
+    const flat = results.flat();
+
+    // Ordenar por relevancia
+    this.opportunities = flat.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+
+    this.isLoadingOpps = false;   // ← ya terminó la carga
+
+    console.log("📈 Oportunidades detectadas:", this.opportunities);
+  });
+
+
+  forkJoin(requests).subscribe(results => {
+    const flat = results.flat();
+
+    // Ordenar por relevancia
+    this.opportunities = flat.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+
+    console.log("📈 Oportunidades detectadas:", this.opportunities);
+  });
 }
+
+
   // ⭐ helper para % cambio desde klines
     private getChangeFromKlines(klines: any[]): number {
     if (!klines || klines.length < 2) return 0;

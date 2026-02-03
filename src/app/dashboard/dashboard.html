@@ -200,35 +200,48 @@
     Oportunidades del día
   </h2>
 
-  <div *ngIf="opportunities.length; else loadingOpps"
-       class="space-y-3 text-gray-700">
+  <!-- Contenedor principal: si NO está cargando -->
+  <div *ngIf="!isLoadingOpps; else loadingOpps">
 
-    <div *ngFor="let o of opportunities"
-         class="flex items-center justify-between border-b border-gray-200 pb-2 last:border-b-0">
+    <!-- Si hay oportunidades -->
+    <div *ngIf="opportunities.length > 0; else noOpps"
+         class="space-y-3 text-gray-700">
 
-      <span class="font-semibold text-gray-800">
-        {{ o.symbol }}
-      </span>
+      <div *ngFor="let o of opportunities"
+           class="flex items-center justify-between border-b border-gray-200 pb-2 last:border-b-0">
 
-      <span class="text-sm text-gray-500">
-        {{ o.reason }}
-      </span>
+        <span class="font-semibold text-gray-800">
+          {{ o.symbol }}
+        </span>
 
-      <span [ngClass]="{
-              'text-green-600': o.type === 'bullish',
-              'text-red-600': o.type === 'bearish',
-              'text-gray-600': o.type === 'neutral'
-            }"
-            class="text-sm font-semibold">
-        {{ o.value | number:'1.1-1' }}
-      </span>
+        <span class="text-sm text-gray-500">
+          {{ o.reason }}
+        </span>
+
+        <span [ngClass]="{
+                'text-green-600': o.type === 'bullish',
+                'text-red-600': o.type === 'bearish',
+                'text-gray-600': o.type === 'neutral'
+              }"
+              class="text-sm font-semibold">
+          {{ o.value | number:'1.1-1' }}
+        </span>
+
+      </div>
     </div>
+
+    <!-- Si NO hay oportunidades -->
+    <ng-template #noOpps>
+      <p class="text-gray-500 text-sm italic text-center py-4">
+        No hay oportunidades del día.
+      </p>
+    </ng-template>
 
   </div>
 
+  <!-- Estado de carga -->
   <ng-template #loadingOpps>
     <p class="text-gray-500 text-sm">Buscando oportunidades...</p>
   </ng-template>
 
-</div>
 </div>
