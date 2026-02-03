@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Dashboard } from './dashboard/dashboard';
-import { SideMenuComponent } from './shared/side-menu/side-menu';
+import { SideMenuComponent } from './side-menu/side-menu';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
