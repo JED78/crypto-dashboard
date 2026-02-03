@@ -6,6 +6,9 @@ import { MatInputModule } from '@angular/material/input';
 import { BaseChartDirective } from 'ng2-charts';
 import { BinanceService } from '../../Services/binance.service';
 import { interval, Subscription, switchMap, forkJoin, map } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { PriceAlert } from '../../app/Models/price-alert.model';
+
 
 import {
   Chart,
@@ -18,7 +21,8 @@ import {
   BarController,
   Filler,
   Tooltip,
-  Legend
+  Legend,
+    FormsModule, 
 } from 'chart.js';
 
 Chart.register(
@@ -194,7 +198,9 @@ opportunities: {
     scales: { x: {}, y: {} }
   };
 
-  constructor(private binance: BinanceService) {}
+  constructor(private binance: BinanceService, private alertService: PriceAlertService) {}
+  
+
 
   ngOnInit() {
     this.loadSymbols();
