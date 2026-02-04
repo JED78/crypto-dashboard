@@ -18,25 +18,48 @@ export class TopGainersComponent {
   topGainers: any[] = [];
   monthlyTop: any[] = [];
 
-  public barChartData: ChartConfiguration<'bar'>['data'] = {
+  // -----------------------------
+  // NUEVA GRÁFICA DE ÁREA SUAVE
+  // -----------------------------
+  public monthlyChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [
       {
         data: [],
         label: 'Beneficio mensual',
-        backgroundColor: '#2563eb',
-        borderColor: '#1e40af',
-        borderWidth: 1
+        fill: true,
+        tension: 0.4,
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.25)',
+        pointRadius: 0,
+        borderWidth: 2
       }
     ]
   };
 
-  public barChartOptions: ChartOptions<'bar'> = {
-    responsive: true,
-    plugins: {
-      legend: { display: false }
+  public monthlyChartOptions: ChartOptions<'line'> = {
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        label: (ctx) => {
+          const value = ctx.raw as number;
+          return value.toLocaleString() + ' $';
+        }
+      }
     }
-  };
+  },
+  scales: {
+    x: { grid: { display: false } },
+    y: {
+      grid: { color: 'rgba(0,0,0,0.05)' },
+      ticks: {
+        callback: (value) => value + ' $'
+      }
+    }
+  }
+};
 
   symbols = [
     'BTC','ETH','BNB','SOL','XRP','ADA','AVAX','DOGE','DOT','LINK',
@@ -47,9 +70,11 @@ export class TopGainersComponent {
 
   ngOnInit() {
     this.loadTopGainers();
-    this.loadMonthlyTopGainers();
   }
 
+  // -----------------------------
+  // TOP GAINERS 24H
+  // -----------------------------
   loadTopGainers() {
     this.isLoading = true;
 
@@ -79,35 +104,7 @@ export class TopGainersComponent {
     });
   }
 
-  loadMonthlyTopGainers() {
-    const requests = this.symbols.map(symbol =>
-      this.binance.getKlines(symbol + 'USDT', '1d', 30).pipe(
-        timeout(5000),
-        retry(2),
-        catchError(() => of([])),
-        map((klines: any[]) => {
-          if (!klines || klines.length < 2) return null;
+ 
 
-          const first = parseFloat(klines[0][4]);
-          const last = parseFloat(klines[klines.length - 1][4]);
-          const volumes = klines.map(k => parseFloat(k[5]));
-          const vol30d = volumes.reduce((a, b) => a + b, 0);
-          const benefit = (last - first) * vol30d;
 
-          return { symbol, benefit };
-        })
-      )
-    );
-
-    forkJoin(requests).subscribe(results => {
-      const valid = results.filter(r => r !== null);
-      this.monthlyTop = valid.sort((a, b) => b.benefit - a.benefit).slice(0, 10);
-      this.updateChart();
-    });
-  }
-
-  updateChart() {
-    this.barChartData.labels = this.monthlyTop.map(x => x.symbol);
-    this.barChartData.datasets[0].data = this.monthlyTop.map(x => x.benefit);
-  }
 }

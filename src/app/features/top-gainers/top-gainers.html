@@ -1,46 +1,37 @@
-<div class="p-6 bg-white/70 backdrop-blur-md rounded-xl shadow-xl">
+<div class="w-full flex flex-col items-center">
 
-  <h2 class="text-2xl font-semibold text-blue-800 mb-4">
-    Top 10 Criptos con Mayor Beneficio Económico (24h)
-  </h2>
+  <!-- TARJETA TOP GAINERS 24H -->
+  <div class="max-w-2xl w-full p-8 rounded-2xl shadow-xl  backdrop-blur-md border border-white/40">
 
-  <div *ngIf="isLoading" class="text-gray-500">
-    Calculando ganancias...
-  </div>
+    <h2 class="text-2xl font-semibold text-blue-800 mb-4 text-center">
+      Top 10 Criptos con Mayor Beneficio Económico (24h)
+    </h2>
 
-  <div *ngIf="!isLoading">
+    <div *ngIf="isLoading" class="text-gray-500 text-center">
+      Calculando ganancias...
+    </div>
 
-    <div *ngFor="let c of topGainers" 
-         class="flex justify-between items-center border-b border-gray-200 py-2">
+    <div *ngIf="!isLoading">
 
-      <div class="font-semibold text-gray-800">
-        {{ c.symbol }}
+      <div *ngFor="let c of topGainers"
+           class="flex justify-between items-center border-b border-gray-200 py-3">
+
+        <div class="font-semibold text-gray-800">
+          {{ c.symbol }}
+        </div>
+
+        <div class="text-sm text-gray-600">
+          {{ c.benefit | number:'1.0-0' }} $
+        </div>
+
+        <button class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+          Comprar
+        </button>
+
       </div>
-
-      <div class="text-sm text-gray-600">
-        Beneficio: {{ c.benefit | number:'1.0-0' }} $
-      </div>
-
-      <button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
-        Comprar
-      </button>
 
     </div>
 
   </div>
 
-
-  <div class="mt-10 p-6 bg-white/70 backdrop-blur-md rounded-xl shadow-xl">
-  <h2 class="text-2xl font-semibold text-blue-800 mb-4">
-    Top 10 Criptos con Mayor Beneficio Económico (Últimos 30 días)
-  </h2>
-
-  <div class="h-96">
-    <canvas baseChart
-            [data]="barChartData"
-            [options]="barChartOptions"
-            [type]="'bar'">
-    </canvas>
-  </div>
-</div>
 </div>

@@ -1,0 +1,104 @@
+<div class="w-full flex flex-col items-center">
+
+  <!-- TARJETA CREAR ALERTA -->
+  <div class="max-w-2xl w-full p-8 rounded-2xl shadow-xl bg-gradient-to-b from-white to-blue-50 backdrop-blur-md border border-white/40">
+
+    <h2 class="text-3xl font-semibold text-blue-800 mb-6 text-center">
+      Crear nueva alerta
+    </h2>
+
+    <div class="flex flex-col gap-6">
+
+      <!-- Selección de cripto -->
+      <div>
+        <label class="text-gray-700 font-semibold">Criptomoneda</label>
+        <select [(ngModel)]="newAlert.symbol"
+                class="w-full mt-1 p-3 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-400">
+          <option *ngFor="let s of symbols" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <!-- Condición -->
+      <div>
+        <label class="text-gray-700 font-semibold">Condición</label>
+        <select [(ngModel)]="newAlert.condition"
+                class="w-full mt-1 p-3 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-400">
+          <option value="above">Cuando suba por encima de</option>
+          <option value="below">Cuando baje por debajo de</option>
+        </select>
+      </div>
+
+      <!-- Precio objetivo -->
+      <div>
+        <label class="text-gray-700 font-semibold">Precio objetivo</label>
+        <input type="number"
+               [(ngModel)]="newAlert.target"
+               class="w-full mt-1 p-3 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-400"
+               placeholder="Ej: 45000">
+      </div>
+
+      <!-- Botón crear -->
+      <button (click)="addAlert()"
+              class="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition shadow-md">
+        ➕ Crear alerta
+      </button>
+
+    </div>
+  </div>
+
+  <!-- TARJETA LISTA DE ALERTAS -->
+  <div class="mt-10 max-w-2xl w-full p-8 rounded-2xl shadow-xl bg-gradient-to-b from-white to-blue-50 backdrop-blur-md border border-white/40">
+
+    <h2 class="text-3xl font-semibold text-blue-800 mb-6 text-center">
+      Alertas activas
+    </h2>
+
+    <div *ngIf="alerts.length === 0" class="text-gray-500 text-center py-4">
+      No hay alertas creadas todavía
+    </div>
+
+    <!-- LISTA DE ALERTAS -->
+    <div *ngFor="let alert of alerts; let i = index"
+         class="flex justify-between items-center border-b border-gray-200 py-4">
+
+      <div>
+        <div class="font-semibold text-gray-800 text-lg">
+          {{ alert.symbol }}
+        </div>
+        <div class="text-sm text-gray-600">
+          {{ alert.condition === 'above' ? 'Suba por encima de' : 'Baje por debajo de' }}
+          <span class="font-semibold">{{ alert.target }} $</span>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+
+        <!-- Botón activar/desactivar -->
+        <button (click)="toggleAlert(alert)"
+                class="px-4 py-2 rounded-xl text-white font-semibold shadow"
+                [class.bg-green-600]="alert.active"
+                [class.bg-gray-400]="!alert.active">
+          {{ alert.active ? 'Activa' : 'Inactiva' }}
+        </button>
+
+        <!-- Botón eliminar -->
+        <button (click)="deleteAlert(i)"
+                class="px-4 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 shadow">
+          🗑
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- NOTIFICACIONES EMERGENTES -->
+  <div *ngFor="let alert of alerts">
+    <div *ngIf="alert.showPopup"
+         class="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-xl shadow-2xl animate-bounce">
+      {{ alert.message }}
+    </div>
+  </div>
+
+</div>

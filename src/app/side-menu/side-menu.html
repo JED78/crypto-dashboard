@@ -38,11 +38,15 @@
       📊 Dashboard
     </a>
 
-    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer">
-      📈 Oportunidades
+    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer"
+   routerLink="/TopCripto"
+   (click)="toggleMenu()">
+      📈 Top Criptomonedas
     </a>
 
-    <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer">
+     <a class="block p-2 rounded hover:bg-gray-100 cursor-pointer"
+   routerLink="/AlertsComponent"
+   (click)="toggleMenu()">
       🔔 Alertas
     </a>
 

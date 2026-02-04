@@ -1,0 +1,48 @@
+ <!-- TARJETA CARRUSEL -->
+  <div class="mt-10 max-w-2xl w-full p-8 rounded-2xl shadow-xl bg-gradient-to-b from-white to-blue-50 backdrop-blur-md border border-white/40">
+
+    <div class="flex justify-between items-center mb-4">
+      <button (click)="prevChart()"
+              class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
+        ⬅️ Anterior
+      </button>
+
+      <h2 class="text-xl font-semibold text-blue-800 text-center">
+        {{ charts[currentChartIndex].title }}
+      </h2>
+
+      <button (click)="nextChart()"
+              class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
+        Siguiente ➡️
+      </button>
+    </div>
+
+    <!-- Contenedor del carrusel -->
+    <div class="relative h-[350px] w-full overflow-hidden">
+
+      <!-- Gráfica mensual -->
+      <div *ngIf="charts[currentChartIndex].type === 'monthly'"
+           class="w-full h-full transition-all duration-500">
+        <canvas baseChart
+                class="w-full h-full"
+                [data]="monthlyChartData"
+                [options]="monthlyChartOptions"
+                [type]="'line'">
+        </canvas>
+      </div>
+
+      <!-- Gráfica trimestral -->
+<div *ngIf="charts[currentChartIndex].type === 'quarterly'"
+     class="w-full h-full transition-all duration-500">
+  <canvas baseChart
+          class="w-full h-full"
+          [data]="quarterlyChartData"
+          [options]="quarterlyChartOptions"
+          [type]="'bar'">
+  </canvas>
+</div>
+
+    </div>
+
+  </div>
+
