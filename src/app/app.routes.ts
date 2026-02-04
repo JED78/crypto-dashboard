@@ -3,6 +3,7 @@ import { TopGainersComponent } from './features/top-gainers/top-gainers';
 import { Dashboard } from '../app/dashboard/dashboard';
 import { TopCripto } from './features/top-cripto/top-cripto';
 import { AlertsComponent } from './features/alerts/alerts';
+import { LineRaceComponent } from './features/line-race-component/line-race-component';
 
 
 export const routes: Routes = [
@@ -15,6 +16,7 @@ export const routes: Routes = [
   loadComponent: () =>
     import('./features/resumendiario/resumendiario').then(m => m.Resumendiario)
 
- }
+ },
+  { path: 'line-race-component', component: LineRaceComponent },
   
 ];
