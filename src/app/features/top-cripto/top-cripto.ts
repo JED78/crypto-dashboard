@@ -41,29 +41,30 @@ export class TopCripto {
   };
 
   public monthlyChartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => {
-            const value = ctx.raw as number;
-            return value.toLocaleString() + ' $';
-          }
-        }
-      }
-    },
-    scales: {
-      x: { grid: { display: false } },
-      y: {
-        grid: { color: 'rgba(0,0,0,0.05)' },
-        ticks: {
-          callback: (value) => value + ' $'
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        label: (ctx) => {
+          const value = ctx.raw as number;
+          return value.toLocaleString() + ' $';
         }
       }
     }
-  };
-
+  },
+  scales: {
+    x: { grid: { display: false } },
+    y: {
+      beginAtZero: false,
+      reverse: false, // 👈 fuerza el eje correcto
+      grid: { color: 'rgba(0,0,0,0.05)' },
+      ticks: {
+        callback: (value) => value + ' $'
+      }
+    }
+  }
+};
   // -----------------------------
   // GRÁFICA DE BARRAS (90 días)
   // -----------------------------
@@ -133,7 +134,7 @@ loadMonthlyTopGainers() {
         const volumes = klines.map(k => parseFloat(k[5]));
         const vol30d = volumes.reduce((a, b) => a + b, 0);
 
-        const benefit = (last - first) * vol30d;
+        const benefit = Math.abs((last - first) * vol30d);
 
         return { symbol, benefit };
       })
@@ -171,7 +172,7 @@ loadMonthlyTopGainers() {
           const volumes = klines.map(k => parseFloat(k[5]));
           const vol90d = volumes.reduce((a, b) => a + b, 0);
 
-          const benefit = (last - first) * vol90d;
+         const benefit = Math.abs((last - first) * vol90d);
 
           return { symbol, benefit };
         })
